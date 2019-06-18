@@ -1,0 +1,18 @@
+server:
+  port: 9999
+  servlet:
+    context-path: /deal
+    
+    
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  thymeleaf:
+    prefix: classpath:/templates/
+    servlet:
+      content-type: text/html
+    suffix: .html
+    cache: false
+    mode: LEGACYHTML5

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+  <head>
+    <title>dealExcel</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+
+  <body>
+  
+    <form th:action="@{/dealExcel}" method="post" enctype="multipart/form-data">
+		<input type ="file" name ="file" id="file" accept=".xls,.xlsx"/>
+		<button type="submit" th:text="保存">保存</button>
+	</form>
+  
+  </body>
+
+</html>
