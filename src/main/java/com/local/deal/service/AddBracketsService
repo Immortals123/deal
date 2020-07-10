@@ -1,0 +1,202 @@
+package com.nec.mdms;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
+
+public class AddBrackets {
+
+  static List<String> errorList = new ArrayList<>();
+
+  static List<String> errorList1 = new ArrayList<>();
+
+  //*************************************************************
+  /**
+   * @param args
+   * @throws Exception
+   */
+  //*************************************************************
+  public static void main(String[] args) throws Exception {
+
+    test("E:/workspace/Mdms/src/main");
+    System.out.println("---------------------- 没加大括号 ------------------");
+    errorList.forEach(System.out::println);
+
+    System.out.println("---------------------- 没加小括号 ------------------");
+    errorList1.forEach(System.out::println);
+  }
+
+  private static void test(String fileDir) throws Exception {
+    List<File> fileList = new ArrayList<File>();
+    File file = new File(fileDir);
+    File[] files = file.listFiles();// 获取目录下的所有文件或文件夹
+    if (files == null) {// 如果目录为空，直接退出
+      return;
+    }
+    // 遍历，目录下的所有文件
+    for (File f : files) {
+      if (f.isFile()) {
+        fileList.add(f);
+      } else if (f.isDirectory()) {
+        test(f.getAbsolutePath());
+      }
+    }
+    int i = 0;
+
+    String aString = "";
+
+    int lineNum = 0;
+
+    boolean aIfBool = true;
+    for (File f1 : fileList) {
+      if (f1.getPath().contains("E:\\workspace\\Mdms\\src\\main\\java\\com\\nec\\mdms\\AddBrackets.java"))
+        continue;
+      if (f1.getPath().endsWith(".ttf") || f1.getPath().endsWith(".xml")) {
+        continue;
+      }
+
+      if (f1.getPath().contains("E:\\workspace\\Mdms\\src\\main\\resources\\static\\js\\")) {
+        if (!f1.getPath().contains("mdms")) {
+          continue;
+        }
+      }
+
+      lineNum = 0;
+
+      InputStreamReader read = new InputStreamReader(new FileInputStream(f1), "UTF-8");// 考虑到编码格式
+      BufferedReader bufferedReader = new BufferedReader(read);
+      String lineTxt = null;
+
+      while ((lineTxt = bufferedReader.readLine()) != null) {
+        lineNum++;
+        if (StringUtils.isEmpty(lineTxt) || StringUtils.isEmpty(lineTxt.trim())) {
+          continue;
+        }
+
+        if (i == 1 && !lineTxt.trim().startsWith("{")) {
+          //          System.out.println(f1.getPath());
+          //          System.out.println(lineNum);
+          List<String> aaList = errorList.stream().filter(aa -> aa.startsWith(f1.getPath() + " : "))
+              .collect(Collectors.toList());
+
+          if (CollectionUtils.isEmpty(aaList)) {
+
+            errorList.add(f1.getPath() + " : " + lineNum);
+          } else {
+            String aaString = aaList.get(0);
+            errorList.remove(aaString);
+
+            errorList.add(aaString + " 、 " + lineNum);
+          }
+          //          
+          //          errorList.add(f1.getPath());
+          i = 0;
+          continue;
+        } else if (i == 2) {
+          aString += lineTxt.trim();
+
+          aIfBool = isValid(aString);
+          if (aIfBool) {
+            if (!lineTxt.contains("{")) {
+              i = 1;
+              continue;
+            } else {
+              i = 0;
+            }
+          } else {
+            continue;
+          }
+        } else {
+          i = 0;
+        }
+
+        if (!StringUtils.isEmpty(lineTxt) && !StringUtils.isEmpty(lineTxt.trim())
+            && (lineTxt.trim().startsWith("if") || lineTxt.trim().contains("else if"))) {
+          i = 0;
+          aString = lineTxt.trim().startsWith("if") ? lineTxt.trim().split("if")[1].trim()
+              : lineTxt.trim().split("else if")[1].trim();
+          if (!aString.startsWith("(")) {
+            List<String> aaList = errorList1.stream().filter(aa -> aa.startsWith(f1.getPath() + " : "))
+                .collect(Collectors.toList());
+
+            if (CollectionUtils.isEmpty(aaList)) {
+
+              errorList1.add(f1.getPath() + " : " + lineNum);
+            } else {
+              String aaString = aaList.get(0);
+              errorList1.remove(aaString);
+
+              errorList1.add(aaString + " 、 " + lineNum);
+            }
+          }
+
+          aIfBool = isValid(aString);
+          if (aIfBool) {
+            if (!lineTxt.contains("{")) {
+              i = 1;
+              continue;
+            } else {
+              i = 0;
+            }
+          } else {
+            i = 2;
+            continue;
+          }
+
+        } else if (!StringUtils.isEmpty(lineTxt) && lineTxt.trim().contains("else")) {
+          if (!lineTxt.contains("{")) {
+            i = 1;
+            continue;
+          } else {
+            i = 0;
+          }
+        }
+      }
+      bufferedReader.close();
+      read.close();
+    }
+
+  }
+
+  private static boolean isValid(String sString) {
+    String s = "";
+    char[] aa = sString.toCharArray();
+    for (char a : aa) {
+      if (a == '(' || a == ')') {
+        s += a;
+      }
+    }
+
+    if (StringUtils.isEmpty(s)) {
+      return true;
+    }
+
+    Stack<Character> stack = new Stack<Character>();
+    for (int i = 0; i < s.length(); i++) {
+      if (s.charAt(i) == ')' || s.charAt(i) == ']' || s.charAt(i) == '}') {
+        if (stack.empty()) {
+          return false;
+        }
+        char c = stack.pop();
+        if ((c == '(' && s.charAt(i) != ')') || (c == '[' && s.charAt(i) != ']') || (c == '{' && s.charAt(i) != '}')) {
+          return false;
+        }
+      } else {
+        stack.push(s.charAt(i));
+      }
+    }
+    if (stack.empty()) {
+      return true;
+    }
+    return false;
+  }
+
+}
